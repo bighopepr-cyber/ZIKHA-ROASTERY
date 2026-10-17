@@ -9,6 +9,7 @@ export type Product = {
   process: string;
   tastingNotes: string[];
   description: string;
+  english?: { description?: string };
   image: string;
   stock: boolean;
 };
@@ -22,6 +23,7 @@ export type Service = {
   features: string[];
   icon: string;
   popular: boolean;
+  english?: { description?: string; features?: string[] };
 };
 
 export type Article = {
@@ -30,4 +32,5 @@ export type Article = {
   date: string;
   image: string;
   body: string;
+  english?: { category?: string; title?: string; date?: string; body?: string };
 };

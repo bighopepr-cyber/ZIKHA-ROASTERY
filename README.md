@@ -1,6 +1,6 @@
 # ZIKHA ROASTERY
 
-Katalog kopi statis dengan Next.js App Router, konten Markdown, dan antarmuka berbahasa Indonesia.
+Katalog kopi statis dengan Next.js App Router, konten Markdown, dan antarmuka Bahasa Indonesia/Inggris.
 
 ## Menjalankan
 
@@ -23,4 +23,4 @@ Setiap berkas memakai YAML frontmatter. Perubahan konten akan masuk ke situs set
 
 ## Deployment
 
-Proyek dikonfigurasi untuk static export Next.js dan Vercel. Deploy output `out/` atau hubungkan repository ke Vercel agar build dijalankan saat push. Gambar katalog menggunakan URL gambar jarak jauh sehingga memerlukan koneksi internet.
+Proyek dikonfigurasi untuk static export Next.js dan Vercel. Hubungkan repository ke Vercel dengan Framework Preset `Next.js` dan build command `npm run build`; jangan set Output Directory ke `out`, karena integrasi Next.js memerlukan manifest build dari `.next/`. Folder `out/` tetap dihasilkan dan dapat diunggah ke penyedia hosting statis non-Vercel. Gambar katalog menggunakan URL gambar jarak jauh sehingga memerlukan koneksi internet.
