@@ -25,7 +25,10 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import type { AboutContent, Article, Product, Service, SiteConfig } from "@/lib/types";
 import { translations, type Locale } from "@/lib/translations";
-import { getYouTubeEmbedUrl } from "@/lib/youtube";
+import { formatCurrency as money, getBeanLabel, getRoastLabel } from "@/lib/presentation";
+import ArticleDialog from "@/app/components/ArticleDialog";
+import LazyImage from "@/app/components/LazyImage";
+import ProductDialog from "@/app/components/ProductDialog";
 
 type Props = {
   products: Product[];
@@ -35,7 +38,6 @@ type Props = {
   about: AboutContent;
 };
 type CartLine = { id: string; quantity: number };
-type LazyImageProps = { src: string; alt: string; className?: string };
 
 function readStorage(key: string): string | null {
   try {
@@ -74,35 +76,9 @@ function parseCart(value: string | null): CartLine[] {
   }
 }
 
-const money = (price: number, locale: Locale = "id") =>
-  new Intl.NumberFormat(locale === "en" ? "en-US" : "id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(price);
 const heroImage =
   "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=2200&q=90";
-const detailImages = [
-  "https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=900&q=85",
-  "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=900&q=85",
-];
 
-function LazyImage({ src, alt, className = "" }: LazyImageProps) {
-  const [state, setState] = useState("is-loading");
-
-  return (
-    <span className={`lazy-image ${state} ${className}`}>
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        onLoad={() => setState("is-loaded")}
-        onError={() => setState("has-error")}
-      />
-    </span>
-  );
-}
 export default function Storefront({
   products,
   services,
@@ -118,7 +94,6 @@ export default function Storefront({
   const [selectedArticle, setSelectedArticle] = useState<
     (typeof articles)[number] | null
   >(null);
-  const [detailImage, setDetailImage] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
@@ -130,7 +105,6 @@ export default function Storefront({
   const t = translations[locale];
   const activeTestimonials = t.testimonials;
   const activeTestimonial = activeTestimonials[testimonialIndex];
-  const selectedArticleVideo = getYouTubeEmbedUrl(selectedArticle?.youtubeUrl);
 
   useEffect(() => {
     setCart(parseCart(readStorage("zikha-cart")));
@@ -237,10 +211,6 @@ export default function Storefront({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  useEffect(() => {
-    if (selected) setDetailImage(selected.image);
-  }, [selected]);
-
   const filteredProducts = useMemo(
     () =>
       products.filter((product) => {
@@ -285,10 +255,8 @@ export default function Storefront({
       ? `Hello ZIKHA ROASTERY, I would like to place an order:\n${cartProducts.map(({ product, quantity }) => `- ${product.name} (${product.weight}) x${quantity}`).join("\n")}\n\nSubtotal: ${money(cartTotal, locale)}\nPlease let me know the shipping cost and payment details.`
       : `Halo ZIKHA ROASTERY, saya ingin memesan:\n${cartProducts.map(({ product, quantity }) => `- ${product.name} (${product.weight}) x${quantity}`).join("\n")}\n\nTotal produk: ${money(cartTotal, locale)}\nMohon info ongkir dan cara pembayarannya.`;
 
-  const labelBean = (value: Product["beanType"]) =>
-    value === "Blend" ? t.blend : value === "Arabica" ? t.arabica : t.robusta;
-  const labelRoast = (value: Product["roastLevel"]) =>
-    value === "Light" ? t.light : value === "Medium" ? t.medium : t.dark;
+  const labelBean = (value: Product["beanType"]) => getBeanLabel(value, locale);
+  const labelRoast = (value: Product["roastLevel"]) => getRoastLabel(value, locale);
 
   function addToCart(product: Product) {
     setCart((current) =>
@@ -1017,184 +985,22 @@ export default function Storefront({
         </div>
       </footer>
 
-      <AnimatePresence>
-        {selected && (
-          <motion.div
-            className="overlay"
-            role="presentation"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) setSelected(null);
-            }}
-          >
-            <motion.section
-              className="product-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="product-modal-title"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 12 }}
-            >
-              <button
-                className="modal-close icon-button"
-                onClick={() => setSelected(null)}
-                aria-label={t.closeProduct}
-              >
-                <X size={20} />
-              </button>
-              <div className="modal-gallery">
-                <div
-                  className="modal-image"
-                >
-                  <LazyImage src={detailImage} alt={`${selected.name} coffee`} />
-                  <span className="roast-badge">
-                      {labelRoast(selected.roastLevel)} {t.roastSuffix}
-                  </span>
-                </div>
-                <div className="gallery-thumbnails">
-                  {[selected.image, ...detailImages].map((image, index) => (
-                    <button
-                      key={image}
-                      onClick={() => setDetailImage(image)}
-                      className={
-                        detailImage === image
-                          ? "gallery-thumbnail active"
-                          : "gallery-thumbnail"
-                      }
-                      aria-label={`Tampilkan foto ${index + 1}`}
-                      aria-pressed={detailImage === image}
-                    >
-                      <LazyImage src={image} alt="" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="modal-copy">
-                <span className="eyebrow">
-                  {selected.origin} · {labelBean(selected.beanType)}
-                </span>
-                <h2 id="product-modal-title">{selected.name}</h2>
-                <p>{locale === "en" ? selected.english?.description ?? selected.description : selected.description}</p>
-                <div className="detail-specs">
-                  <div>
-                    <span>{t.origin}</span>
-                    <b>{selected.origin}</b>
-                  </div>
-                  <div>
-                    <span>{t.process}</span>
-                    <b>{selected.process}</b>
-                  </div>
-                  <div>
-                    <span>{t.roastLevel}</span>
-                    <b>{selected.roastLevel}</b>
-                  </div>
-                  <div>
-                    <span>{t.weight}</span>
-                    <b>{selected.weight}</b>
-                  </div>
-                </div>
-                <div className="modal-notes">
-                  <span>{t.tastingNotes}</span>
-                  <div>
-                    {selected.tastingNotes.map((note) => (
-                      <i key={note}>{note}</i>
-                    ))}
-                  </div>
-                </div>
-                <div className="modal-action">
-                  <div>
-                    <strong>{money(selected.price, locale)}</strong>
-                    <small> / {selected.weight}</small>
-                  </div>
-                  <button
-                    className="button button-dark"
-                    onClick={() => {
-                      addToCart(selected);
-                      setSelected(null);
-                      setCartOpen(true);
-                    }}
-                  >
-                    <ShoppingBag size={16} /> {t.addProduct}
-                  </button>
-                </div>
-              </div>
-            </motion.section>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ProductDialog
+        product={selected}
+        locale={locale}
+        onClose={() => setSelected(null)}
+        onAddToCart={(product) => {
+          addToCart(product);
+          setSelected(null);
+          setCartOpen(true);
+        }}
+      />
 
-      <AnimatePresence>
-        {selectedArticle && (
-          <motion.div
-            className="overlay"
-            role="presentation"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget)
-                setSelectedArticle(null);
-            }}
-          >
-            <motion.article
-              className="article-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="article-title"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 12 }}
-            >
-              <button
-                className="modal-close icon-button"
-                onClick={() => setSelectedArticle(null)}
-                aria-label={t.closeArticle}
-              >
-                <X size={20} />
-              </button>
-              <div
-                className="article-modal-image"
-              >
-                <LazyImage
-                  src={selectedArticle.image}
-                  alt={locale === "en" ? selectedArticle.english?.title ?? selectedArticle.title : selectedArticle.title}
-                />
-              </div>
-              {selectedArticleVideo && (
-                <div className="article-video">
-                  <iframe
-                    src={selectedArticleVideo}
-                    title={t.youtubeFrameTitle}
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
-                  />
-                </div>
-              )}
-              <div className="article-modal-copy">
-                <div className="journal-meta">
-                  <span>{locale === "en" ? selectedArticle.english?.category ?? selectedArticle.category : selectedArticle.category}</span>
-                  <span>{locale === "en" ? selectedArticle.english?.date ?? selectedArticle.date : selectedArticle.date}</span>
-                </div>
-                <h2 id="article-title">{locale === "en" ? selectedArticle.english?.title ?? selectedArticle.title : selectedArticle.title}</h2>
-                {(locale === "en" ? selectedArticle.english?.body ?? selectedArticle.body : selectedArticle.body).split("\n\n").map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-                <button
-                  className="text-link"
-                  onClick={() => setSelectedArticle(null)}
-                >
-                  {t.backToJournal} <ArrowLeft size={15} />
-                </button>
-              </div>
-            </motion.article>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ArticleDialog
+        article={selectedArticle}
+        locale={locale}
+        onClose={() => setSelectedArticle(null)}
+      />
 
       <AnimatePresence>
         {cartOpen && (
