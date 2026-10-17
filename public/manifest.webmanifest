@@ -1,0 +1,13 @@
+{
+  "name": "ZIKHA ROASTERY",
+  "short_name": "ZIKHA",
+  "description": "Kopi pilihan dari petani lokal, disangrai segar dalam batch kecil.",
+  "lang": "id",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2efe8",
+  "theme_color": "#334a37",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
