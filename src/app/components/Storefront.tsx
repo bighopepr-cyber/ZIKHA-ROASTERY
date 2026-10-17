@@ -23,7 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { Article, Product, Service } from "@/lib/types";
+import type { AboutContent, Article, Product, Service, SiteConfig } from "@/lib/types";
 import { translations, type Locale } from "@/lib/translations";
 import { getYouTubeEmbedUrl } from "@/lib/youtube";
 
@@ -31,11 +31,49 @@ type Props = {
   products: Product[];
   services: Service[];
   articles: Article[];
-  config: Record<string, any>;
-  about: Record<string, any>;
+  config: SiteConfig;
+  about: AboutContent;
 };
 type CartLine = { id: string; quantity: number };
 type LazyImageProps = { src: string; alt: string; className?: string };
+
+function readStorage(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorage(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Persistence is optional; keep the in-memory interaction available.
+  }
+}
+
+function isCartLine(value: unknown): value is CartLine {
+  if (typeof value !== "object" || value === null) return false;
+  const line = value as { id?: unknown; quantity?: unknown };
+  return (
+    typeof line.id === "string" &&
+    Number.isInteger(line.quantity) &&
+    (line.quantity as number) > 0
+  );
+}
+
+function parseCart(value: string | null): CartLine[] {
+  if (!value) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter(isCartLine) : [];
+  } catch {
+    return [];
+  }
+}
+
 const money = (price: number, locale: Locale = "id") =>
   new Intl.NumberFormat(locale === "en" ? "en-US" : "id-ID", {
     style: "currency",
@@ -95,18 +133,11 @@ export default function Storefront({
   const selectedArticleVideo = getYouTubeEmbedUrl(selectedArticle?.youtubeUrl);
 
   useEffect(() => {
-    try {
-      const storedCart = localStorage.getItem("zikha-cart");
-      const storedTheme = localStorage.getItem("zikha-theme");
-      const storedLocale = localStorage.getItem("zikha-locale");
-      if (storedCart) setCart(JSON.parse(storedCart) as CartLine[]);
-      if (storedTheme === "dark" || storedTheme === "light")
-        setTheme(storedTheme);
-      if (storedLocale === "en" || storedLocale === "id")
-        setLocale(storedLocale);
-    } catch {
-      localStorage.removeItem("zikha-cart");
-    }
+    setCart(parseCart(readStorage("zikha-cart")));
+    const storedTheme = readStorage("zikha-theme");
+    const storedLocale = readStorage("zikha-locale");
+    if (storedTheme === "dark" || storedTheme === "light") setTheme(storedTheme);
+    if (storedLocale === "en" || storedLocale === "id") setLocale(storedLocale);
     setHydrated(true);
   }, []);
 
@@ -117,9 +148,9 @@ export default function Storefront({
 
   useEffect(() => {
     if (!hydrated) return;
-    localStorage.setItem("zikha-cart", JSON.stringify(cart));
-    localStorage.setItem("zikha-theme", theme);
-    localStorage.setItem("zikha-locale", locale);
+    writeStorage("zikha-cart", JSON.stringify(cart));
+    writeStorage("zikha-theme", theme);
+    writeStorage("zikha-locale", locale);
     document.documentElement.classList.toggle("dark-theme", theme === "dark");
     document.documentElement.lang = locale;
     document.title = t.documentTitle;
