@@ -32,5 +32,6 @@ export type Article = {
   date: string;
   image: string;
   body: string;
+  youtubeUrl?: string;
   english?: { category?: string; title?: string; date?: string; body?: string };
 };

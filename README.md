@@ -21,6 +21,19 @@ Buka `http://localhost:3000`. Periksa tipe dengan `npm run lint`, dan hasilkan s
 
 Setiap berkas memakai YAML frontmatter. Perubahan konten akan masuk ke situs setelah rebuild. Checkout adalah simulasi yang merangkum pesanan dan meneruskannya ke WhatsApp; newsletter membuka draf email di aplikasi pengguna, belum menyimpan pendaftar ke layanan mailing list.
 
+Artikel dapat menyertakan video YouTube dengan properti opsional `youtubeUrl` di item `articles` pada `content/articles.md`:
+
+```yaml
+- category: BREW GUIDE
+	title: Contoh artikel seduh
+	date: '17 OKTOBER 2026'
+	image: https://example.com/coffee.jpg
+	youtubeUrl: https://www.youtube.com/watch?v=VIDEO_ID_HERE
+	body: Isi artikel dalam Markdown.
+```
+
+URL `youtube.com`, `youtu.be`, dan link Shorts didukung. Pemutar muncul di detail artikel hanya jika URL memiliki host YouTube dan ID video yang valid.
+
 ## Deployment
 
 Proyek dikonfigurasi untuk static export Next.js dan Vercel. Hubungkan repository ke Vercel dengan Framework Preset `Next.js` dan build command `npm run build`; jangan set Output Directory ke `out`, karena integrasi Next.js memerlukan manifest build dari `.next/`. Folder `out/` tetap dihasilkan dan dapat diunggah ke penyedia hosting statis non-Vercel. Gambar katalog menggunakan URL gambar jarak jauh sehingga memerlukan koneksi internet.

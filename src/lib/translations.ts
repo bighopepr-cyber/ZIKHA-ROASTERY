@@ -29,7 +29,7 @@ export const translations = {
     roastingCopy: 'Punya green bean sendiri? Kami bantu menemukan profil sangrai yang paling pas, dari first crack sampai karakter rasa yang kamu cari.', popular: 'PALING DIPILIH',
     discussRoasting: 'Diskusikan kebutuhanmu', consultMessage: 'Halo ZIKHA ROASTERY, saya ingin konsultasi jasa roasting.',
     quote: 'Rasa yang baik berawal dari hubungan yang baik.', quoteAttribution: 'ZIKHA ROASTERY · BERDIRI BERSAMA PETANI LOKAL',
-    journalEyebrow: 'CATATAN DARI ROASTERY', journalStart: 'Jurnal', journalEmphasis: 'seduhan.', readStories: 'Baca semua cerita', readArticle: 'Baca',
+    journalEyebrow: 'CATATAN DARI ROASTERY', journalStart: 'Jurnal', journalEmphasis: 'seduhan.', readStories: 'Baca semua cerita', readArticle: 'Baca', youtubeFrameTitle: 'Video YouTube terkait',
     testimonialEyebrow: 'KATA MEREKA', rating: '4.9 / 5 · DARI PENCINTA KOPI', previousReview: 'Ulasan sebelumnya', nextReview: 'Ulasan berikutnya',
     testimonials: [
       { quote: 'Akhirnya nemu kopi lokal yang konsisten. Arabica Medium-nya punya manis karamel yang enak banget, bahkan diseduh simpel pakai V60.', name: 'Rani A.', since: 'Pelanggan sejak 2023', product: 'ARABICA MEDIUM · JAKARTA', initials: 'RA' },
@@ -89,7 +89,7 @@ export const translations = {
     roastingCopy: 'Have your own green beans? We will help find the right roast profile, from first crack to the flavor you are looking for.', popular: 'MOST POPULAR',
     discussRoasting: 'Talk to us about roasting', consultMessage: 'Hello ZIKHA ROASTERY, I would like to ask about your roasting service.',
     quote: 'Good flavor begins with good relationships.', quoteAttribution: 'ZIKHA ROASTERY · GROWING WITH LOCAL FARMERS',
-    journalEyebrow: 'NOTES FROM THE ROASTERY', journalStart: 'Brew', journalEmphasis: 'journal.', readStories: 'Read our stories', readArticle: 'Read',
+    journalEyebrow: 'NOTES FROM THE ROASTERY', journalStart: 'Brew', journalEmphasis: 'journal.', readStories: 'Read our stories', readArticle: 'Read', youtubeFrameTitle: 'Related YouTube video',
     testimonialEyebrow: 'WHAT PEOPLE SAY', rating: '4.9 / 5 · FROM COFFEE LOVERS', previousReview: 'Previous review', nextReview: 'Next review',
     testimonials: [
       { quote: 'I finally found a local coffee I can count on. The Arabica Medium has a lovely caramel sweetness, even when brewed simply with a V60.', name: 'Rani A.', since: 'Customer since 2023', product: 'ARABICA MEDIUM · JAKARTA', initials: 'RA' },

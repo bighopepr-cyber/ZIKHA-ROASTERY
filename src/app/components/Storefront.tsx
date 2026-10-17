@@ -25,6 +25,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import type { Article, Product, Service } from "@/lib/types";
 import { translations, type Locale } from "@/lib/translations";
+import { getYouTubeEmbedUrl } from "@/lib/youtube";
 
 type Props = {
   products: Product[];
@@ -34,6 +35,7 @@ type Props = {
   about: Record<string, any>;
 };
 type CartLine = { id: string; quantity: number };
+type LazyImageProps = { src: string; alt: string; className?: string };
 const money = (price: number, locale: Locale = "id") =>
   new Intl.NumberFormat(locale === "en" ? "en-US" : "id-ID", {
     style: "currency",
@@ -46,6 +48,23 @@ const detailImages = [
   "https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=900&q=85",
   "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=900&q=85",
 ];
+
+function LazyImage({ src, alt, className = "" }: LazyImageProps) {
+  const [state, setState] = useState("is-loading");
+
+  return (
+    <span className={`lazy-image ${state} ${className}`}>
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setState("is-loaded")}
+        onError={() => setState("has-error")}
+      />
+    </span>
+  );
+}
 export default function Storefront({
   products,
   services,
@@ -73,6 +92,7 @@ export default function Storefront({
   const t = translations[locale];
   const activeTestimonials = t.testimonials;
   const activeTestimonial = activeTestimonials[testimonialIndex];
+  const selectedArticleVideo = getYouTubeEmbedUrl(selectedArticle?.youtubeUrl);
 
   useEffect(() => {
     try {
@@ -116,16 +136,50 @@ export default function Storefront({
 
   useEffect(() => {
     if (!selected && !selectedArticle && !cartOpen && !compareOpen) return;
+    const dialogs = document.querySelectorAll<HTMLElement>(
+      ".overlay [role='dialog']",
+    );
+    const dialog = dialogs[dialogs.length - 1];
+    if (!dialog) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const getFocusableElements = () =>
+      Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+
+    getFocusableElements()[0]?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSelected(null);
         setSelectedArticle(null);
         setCartOpen(false);
         setCompareOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusableElements = getFocusableElements();
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      if (!firstElement || !lastElement) {
+        event.preventDefault();
+        dialog.focus();
+      } else if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+    };
   }, [selected, selectedArticle, cartOpen, compareOpen]);
 
   useEffect(() => {
@@ -492,8 +546,8 @@ export default function Storefront({
                         className="product-image"
                         onClick={() => setSelected(product)}
                         aria-label={`${t.viewDetails} ${product.name}`}
-                        style={{ backgroundImage: `url("${product.image}")` }}
                       >
+                        <LazyImage src={product.image} alt="" />
                         <span className="roast-badge">
                           {labelRoast(product.roastLevel)} {t.roastSuffix}
                         </span>
@@ -602,7 +656,12 @@ export default function Storefront({
             className="roasting-photo"
             role="img"
             aria-label="Biji kopi sedang disiapkan untuk proses roasting"
-          />
+          >
+            <LazyImage
+              src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1300&q=90"
+              alt=""
+            />
+          </div>
           <div className="roasting-content">
             <span className="eyebrow light-eyebrow">
               <span className="section-index">03</span> {t.roastingEyebrow}
@@ -692,9 +751,12 @@ export default function Storefront({
                   type="button"
                   className="journal-image"
                   onClick={() => setSelectedArticle(article)}
-                  style={{ backgroundImage: `url("${article.image}")` }}
                   aria-label={`${t.readArticle}: ${locale === "en" ? article.english?.title ?? article.title : article.title}`}
                 >
+                  <LazyImage
+                    src={article.image}
+                    alt={locale === "en" ? article.english?.title ?? article.title : article.title}
+                  />
                   <span>0{index + 1}</span>
                   <ArrowUpRight size={18} />
                 </button>
@@ -955,8 +1017,8 @@ export default function Storefront({
               <div className="modal-gallery">
                 <div
                   className="modal-image"
-                  style={{ backgroundImage: `url("${detailImage}")` }}
                 >
+                  <LazyImage src={detailImage} alt={`${selected.name} coffee`} />
                   <span className="roast-badge">
                       {labelRoast(selected.roastLevel)} {t.roastSuffix}
                   </span>
@@ -973,8 +1035,9 @@ export default function Storefront({
                       }
                       aria-label={`Tampilkan foto ${index + 1}`}
                       aria-pressed={detailImage === image}
-                      style={{ backgroundImage: `url("${image}")` }}
-                    />
+                    >
+                      <LazyImage src={image} alt="" />
+                    </button>
                   ))}
                 </div>
               </div>
@@ -1063,8 +1126,24 @@ export default function Storefront({
               </button>
               <div
                 className="article-modal-image"
-                style={{ backgroundImage: `url("${selectedArticle.image}")` }}
-              />
+              >
+                <LazyImage
+                  src={selectedArticle.image}
+                  alt={locale === "en" ? selectedArticle.english?.title ?? selectedArticle.title : selectedArticle.title}
+                />
+              </div>
+              {selectedArticleVideo && (
+                <div className="article-video">
+                  <iframe
+                    src={selectedArticleVideo}
+                    title={t.youtubeFrameTitle}
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+              )}
               <div className="article-modal-copy">
                 <div className="journal-meta">
                   <span>{locale === "en" ? selectedArticle.english?.category ?? selectedArticle.category : selectedArticle.category}</span>
@@ -1130,8 +1209,9 @@ export default function Storefront({
                       <div className="cart-line" key={product.id}>
                         <div
                           className="cart-thumb"
-                          style={{ backgroundImage: `url("${product.image}")` }}
-                        />
+                        >
+                          <LazyImage src={product.image} alt="" />
+                        </div>
                         <div className="cart-line-info">
                           <span>
                             {product.origin} · {labelRoast(product.roastLevel)}
@@ -1313,8 +1393,9 @@ export default function Storefront({
                   <div className="compare-column" key={product.id}>
                     <div
                       className="compare-product-image"
-                      style={{ backgroundImage: `url("${product.image}")` }}
-                    />
+                    >
+                      <LazyImage src={product.image} alt="" />
+                    </div>
                     <h3>{product.name}</h3>
                     <span>{labelBean(product.beanType)}</span>
                     <span>{product.origin}</span>
